@@ -260,6 +260,7 @@ export function processExpression(
   walkIdentifiers(
     ast,
     (node, parent, _, isReferenced, isLocal) => {
+      debugger
       if (isStaticPropertyKey(node, parent!)) {
         return
       }
@@ -275,7 +276,8 @@ export function processExpression(
           // we rewrite the value
           ;(node as QualifiedId).prefix = `${node.name}: `
         }
-        node.name = rewriteIdentifier(node.name, parent, node)
+        let refPrefix = ProcessMemberExpression(parent, parentStack, context)
+        node.name = refPrefix + rewriteIdentifier(node.name, parent, node)
         ids.push(node as QualifiedId)
       } else {
         // The identifier is considered constant unless it's pointing to a
@@ -285,7 +287,12 @@ export function processExpression(
         }
         // also generate sub-expressions for other identifiers for better
         // source map support. (except for property keys which are static)
-        ids.push(node as QualifiedId)
+        if (parent.type === 'MemberExpression') {
+          node.name = node.name + ')'
+          ids.push(node as QualifiedId)
+        } else {
+          ids.push(node as QualifiedId)
+        }
       }
     },
     true, // invoke on ALL identifiers
@@ -337,6 +344,31 @@ export function processExpression(
   }
   ret.identifiers = Object.keys(knownIds)
   return ret
+}
+
+function ProcessMemberExpression(
+  parent: Node,
+  parentStack: string | any[],
+  context: TransformContext
+) {
+  let refPrefix = ''
+  if (parent.type === 'MemberExpression') {
+    let count = 0
+    let length = parentStack.length
+    while (length) {
+      if (parentStack[length - 1].type === 'MemberExpression') {
+        count++
+      } else {
+        break
+      }
+      length--
+    }
+
+    for (let i = 0; i < count; i++) {
+      refPrefix += `${context.helperString(UNREF)}(`
+    }
+  }
+  return refPrefix
 }
 
 function canPrefix(id: Identifier) {

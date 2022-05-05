@@ -137,6 +137,7 @@ export function compileScript(
   sfc: SFCDescriptor,
   options: SFCScriptCompileOptions
 ): SFCScriptBlock {
+  debugger
   let { script, scriptSetup, source, filename } = sfc
   // feature flags
   // TODO remove support for deprecated options when out of experimental
