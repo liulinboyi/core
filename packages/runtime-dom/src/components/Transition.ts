@@ -174,9 +174,9 @@ export function resolveTransitionProps(
     done && done()
   }
 
-  let isLeaving = false
+  let isLeavingCount = 0
   const finishLeave = (el: Element, done?: () => void) => {
-    isLeaving = false
+    isLeavingCount--
     removeTransitionClass(el, leaveFromClass)
     removeTransitionClass(el, leaveToClass)
     removeTransitionClass(el, leaveActiveClass)
@@ -224,7 +224,7 @@ export function resolveTransitionProps(
     onEnter: makeEnterHook(false),
     onAppear: makeEnterHook(true),
     onLeave(el, done) {
-      isLeaving = true
+      isLeavingCount++
       const resolve = () => finishLeave(el, done)
       addTransitionClass(el, leaveFromClass)
       if (__COMPAT__ && legacyClassEnabled) {
@@ -234,7 +234,7 @@ export function resolveTransitionProps(
       forceReflow()
       addTransitionClass(el, leaveActiveClass)
       nextFrame(() => {
-        if (!isLeaving) {
+        if (isLeavingCount === 0) {
           // cancelled
           return
         }
