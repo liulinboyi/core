@@ -54,6 +54,7 @@ import { warnOnce } from './warn'
 import { rewriteDefault } from './rewriteDefault'
 import { createCache } from './cache'
 import { shouldTransform, transformAST } from '@vue/reactivity-transform'
+import { getFileDefinePropsType, setDefinePropsInfo } from './importDefinePropsType'
 
 // Special compiler macros
 const DEFINE_PROPS = 'defineProps'
@@ -595,6 +596,7 @@ export function compileScript(
           return qualified
         }
       }
+      return getFileDefinePropsType(body, parse, isQualifiedType, error)
     }
   }
 
@@ -1033,6 +1035,7 @@ export function compileScript(
           imported = '*'
         }
         const source = node.source.value
+        setDefinePropsInfo(filename, plugins, node)
         const existing = userImports[local]
         if (
           source === 'vue' &&
